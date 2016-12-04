@@ -288,15 +288,19 @@ public class DestinationIPFlowInfo {
         return aggregateFeatures;
     }
 
-    private int getTotalPeriodicCommunications() {
+    private String getPeriodicCommunicationFeatures() {
 
-        int totalPeriodicCommunications = 0;
+        int totalPeriodicCommunications = 0, totalPeriodicSourceIPs = 0;
         for (Map.Entry<String, FlowList> entry: this.sourceIPFlowMap.entrySet()
                 ) {
-            totalPeriodicCommunications += entry.getValue().getPeriodicCommunications();
+            int periodicCommunicationPerSourceIP = 0;
+            if((periodicCommunicationPerSourceIP = entry.getValue().getPeriodicCommunications()) > 0){
+               totalPeriodicSourceIPs++;
+            }
+            totalPeriodicCommunications += periodicCommunicationPerSourceIP;
         }
 
-        return totalPeriodicCommunications;
+        return String.format("%d %.2f", totalPeriodicCommunications, (float)totalPeriodicSourceIPs/this.getTotalSourceIPs());
     }
 
     public String getFeatureSet(String subnetFeatures) {
@@ -316,11 +320,11 @@ public class DestinationIPFlowInfo {
                     aggregateFeature.getAverageInfo(), aggregateFeature.getVariance(), aggregateFeature.getStandardDeviation());
         }
         aggrFeatures.trim();
-        String featureSet = String.format("%d %d %d %d %d %s %s %s %d %d",
+        String featureSet = String.format("%d %d %d %d %d %s %s %s %s %d",
                 getTotalSourceIPs(), getTotalProtocols(),
                 this.totalBidirectionalFlows, this.totalClientFlows, this.totalServerFlows,
                 Integer.toString(protocols), aggrFeatures, subnetFeatures,
-                this.getTotalPeriodicCommunications(),
+                this.getPeriodicCommunicationFeatures(),
                 (this.outputLabel.size() > 1)? 1 : this.outputLabel.iterator().next().getValue()
 
                 );
